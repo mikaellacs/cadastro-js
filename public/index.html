@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Gastos</title>
+  </head>
+  <body>
+    <h2>Cadastro de Despesas</h2>
+    <form id="cadastroForm">
+      <label>Descrição: <input type="text" id="descricao" required /></label>
+      <br /><br />
+      <label>
+        Categoria:
+        <select id="categoria" required></select>
+        <button type="button" id="criarCategoria">Criar Categoria</button>
+      </label>
+      <br /><br />
+      <label
+        >Valor: <input type="number" id="valor" step="0.01" required
+      /></label>
+      <br /><br />
+      <label>Data: <input type="date" id="data" required /></label>
+      <br /><br />
+      <label>
+        Centro de Custo:
+        <select id="centroCusto" required></select>
+        <button type="button" id="criarCentroCusto">
+          Criar Centro de Custo
+        </button>
+      </label>
+      <br /><br />
+      <button type="submit">Salvar</button>
+    </form>
+
+    <button onclick="exportarExcel()">Exportar Excel</button>
+
+    <script>
+      // Função para carregar categorias e centros de custo
+      async function carregarOpcoes() {
+        const categoriaSelect = document.getElementById('categoria');
+        const centroCustoSelect = document.getElementById('centroCusto');
+
+        // Limpar as opções antes de adicionar novas
+        categoriaSelect.innerHTML = '';
+        centroCustoSelect.innerHTML = '';
+
+        const categorias = await fetch('http://localhost:3000/categorias').then(
+          (res) => res.json()
+        );
+        categorias.forEach((cat) => {
+          const option = document.createElement('option');
+          option.value = cat.nome;
+          option.textContent = cat.nome;
+          categoriaSelect.appendChild(option);
+        });
+
+        const centrosCusto = await fetch(
+          'http://localhost:3000/centro-custo'
+        ).then((res) => res.json());
+        centrosCusto.forEach((centro) => {
+          const option = document.createElement('option');
+          option.value = centro.nome;
+          option.textContent = centro.nome;
+          centroCustoSelect.appendChild(option);
+        });
+      }
+
+      // Criar nova categoria
+      async function criarCategoria() {
+        const nomeCategoria = prompt('Digite o nome da nova categoria:');
+        if (!nomeCategoria)
+          return alert('Nome da categoria não pode ser vazio!');
+
+        const response = await fetch('http://localhost:3000/categorias', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome: nomeCategoria }),
+        });
+
+        if (response.ok) {
+          alert('Categoria criada com sucesso!');
+          carregarOpcoes(); // Atualizar categorias
+        } else {
+          alert('Erro ao criar categoria. Talvez ela já exista.');
+        }
+      }
+
+      // Criar novo centro de custo
+      async function criarCentroCusto() {
+        const nomeCentroCusto = prompt(
+          'Digite o nome do novo centro de custo:'
+        );
+        if (!nomeCentroCusto)
+          return alert('Nome do centro de custo não pode ser vazio!');
+
+        const response = await fetch('http://localhost:3000/centro-custo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome: nomeCentroCusto }),
+        });
+
+        if (response.ok) {
+          alert('Centro de Custo criado com sucesso!');
+          carregarOpcoes(); // Atualizar centros de custo
+        } else {
+          alert('Erro ao criar centro de custo. Talvez ele já exista.');
+        }
+      }
+
+      // Envio do formulário de cadastro
+      document
+        .getElementById('cadastroForm')
+        .addEventListener('submit', async function (event) {
+          event.preventDefault();
+
+          const descricao = document.getElementById('descricao').value;
+          const categoria = document.getElementById('categoria').value;
+          const valor = document.getElementById('valor').value;
+          const data = document.getElementById('data').value;
+          const centroCusto = document.getElementById('centroCusto').value;
+
+          const response = await fetch('http://localhost:3000/cadastro', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              descricao,
+              categoria,
+              valor,
+              data,
+              centro_custo: centroCusto, // Corrigido para corresponder ao backend
+            }),
+          });
+
+          if (response.ok) {
+            alert('Cadastro salvo com sucesso!');
+            document.getElementById('cadastroForm').reset();
+          } else {
+            alert('Erro ao salvar cadastro. Verifique os campos.');
+          }
+        });
+
+      // Exportar os dados para Excel
+      function exportarExcel() {
+        window.location.href = 'http://localhost:3000/exportar-excel';
+      }
+
+      // Eventos de clique para criar categoria e centro de custo
+      document
+        .getElementById('criarCategoria')
+        .addEventListener('click', criarCategoria);
+      document
+        .getElementById('criarCentroCusto')
+        .addEventListener('click', criarCentroCusto);
+
+      // Carregar as opções ao carregar a página
+      carregarOpcoes();
+    </script>
+  </body>
+</html>
