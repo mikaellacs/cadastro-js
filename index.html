@@ -34,6 +34,7 @@
     </form>
 
     <button onclick="exportarExcel()">Exportar Excel</button>
+    <button onclick="zerarDados()">Zerar Dados</button>
 
     <script>
       // Função para carregar categorias e centros de custo
@@ -143,6 +144,19 @@
       // Exportar os dados para Excel
       function exportarExcel() {
         window.location.href = 'http://localhost:3000/exportar-excel';
+      }
+
+      // Função para zerar os dados
+      function zerarDados() {
+        fetch('http://localhost:3000/zerar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => alert(data.message))
+          .catch((error) => alert('Erro ao zerar os dados.'));
       }
 
       // Eventos de clique para criar categoria e centro de custo
