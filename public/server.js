@@ -38,8 +38,18 @@ db.serialize(() => {
   );
 
   // Inserir categorias padrão
-  db.run('INSERT OR IGNORE INTO categorias (nome) VALUES');
-  db.run('INSERT OR IGNORE INTO centro_custo (nome) VALUES');
+  db.run('INSERT OR IGNORE INTO categorias (nome) VALUES (?)', ['Alimentação']);
+  db.run('INSERT OR IGNORE INTO categorias (nome) VALUES (?)', ['Transporte']);
+  db.run('INSERT OR IGNORE INTO categorias (nome) VALUES (?)', ['Saúde']);
+
+  // Inserir centros de custo padrão
+  db.run('INSERT OR IGNORE INTO centro_custo (nome) VALUES (?)', [
+    'Administração',
+  ]);
+  db.run('INSERT OR IGNORE INTO centro_custo (nome) VALUES (?)', [
+    'Financeiro',
+  ]);
+  db.run('INSERT OR IGNORE INTO centro_custo (nome) VALUES (?)', ['RH']);
 });
 
 // Criar uma nova categoria
@@ -110,6 +120,16 @@ app.post('/cadastro', (req, res) => {
             return res
               .status(400)
               .json({ error: 'Centro de Custo não encontrado.' });
+
+          // Validação de valor e data
+          if (isNaN(valor)) {
+            return res.status(400).json({ error: 'Valor inválido.' });
+          }
+
+          const dataRegex = /^\d{4}-\d{2}-\d{2}$/; // Exemplo de regex para data no formato 'YYYY-MM-DD'
+          if (!data.match(dataRegex)) {
+            return res.status(400).json({ error: 'Data inválida.' });
+          }
 
           db.run(
             'INSERT INTO cadastros (descricao, categoria, valor, data, centro_custo) VALUES (?, ?, ?, ?, ?)',
