@@ -39,6 +39,33 @@ db.serialize(() => {
   );
 });
 
+// Rota para listar categorias
+app.get('/categorias', (req, res) => {
+  db.all('SELECT nome FROM categorias', [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(rows);
+    }
+  });
+});
+
+// Rota para listar centros de custo
+app.get('/centro-custo', (req, res) => {
+  db.all('SELECT nome FROM centro_custo', [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(rows);
+    }
+  });
+});
+
+app.post('/cadastro', (req, res) => {
+  console.log('Recebendo um novo cadastro:', req.body);
+  res.json({ message: 'Teste de resposta do servidor' });
+});
+
 // Exportar cadastros para Excel e zerar a tabela
 app.get('/exportar-excel', async (req, res) => {
   db.all(
