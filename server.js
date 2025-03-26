@@ -3,15 +3,15 @@ const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const ExcelJS = require('exceljs');
 const fs = require('fs');
-const path = require('path'); // Para garantir caminhos corretos de arquivos
+const path = require('path');
 
 const app = express();
-const db = new sqlite3.Database(__dirname + '/../database.db');
+const db = new sqlite3.Database(path.join(__dirname, 'database.db'));
 
 app.use(cors());
 app.use(express.json());
 
-// Criar tabelas se não existirem
+// criar tabelas se não existirem
 db.serialize(() => {
   db.run(
     `CREATE TABLE IF NOT EXISTS categorias (
@@ -37,9 +37,45 @@ db.serialize(() => {
       centro_custo TEXT NOT NULL
     )`
   );
+
+  // inserir categorias padrão
+  db.run('INSERT OR IGNORE INTO categorias (nome) VALUES');
+  db.run('INSERT OR IGNORE INTO centro_custo (nome) VALUES');
 });
 
-// Rota para listar categorias
+// criar uma nova categoria
+app.post('/categorias', (req, res) => {
+  const { nome } = req.body;
+  if (!nome)
+    return res.status(400).json({ error: 'Nome da categoria é obrigatório.' });
+
+  db.run('INSERT INTO categorias (nome) VALUES (?)', [nome], function (err) {
+    if (err)
+      return res
+        .status(500)
+        .json({ error: 'Erro ao cadastrar categoria. Ela pode já existir.' });
+    res.json({ id: this.lastID, nome });
+  });
+});
+
+// criar um novo centro de custo
+app.post('/centro-custo', (req, res) => {
+  const { nome } = req.body;
+  if (!nome)
+    return res
+      .status(400)
+      .json({ error: 'Nome do centro de custo é obrigatório.' });
+
+  db.run('INSERT INTO centro_custo (nome) VALUES (?)', [nome], function (err) {
+    if (err)
+      return res.status(500).json({
+        error: 'Erro ao cadastrar centro de custo. Ele pode já existir.',
+      });
+    res.json({ id: this.lastID, nome });
+  });
+});
+
+// obter categorias do banco
 app.get('/categorias', (req, res) => {
   db.all('SELECT nome FROM categorias', [], (err, rows) => {
     if (err) {
@@ -50,7 +86,7 @@ app.get('/categorias', (req, res) => {
   });
 });
 
-// Rota para listar centros de custo
+// obter centros de custo do banco
 app.get('/centro-custo', (req, res) => {
   db.all('SELECT nome FROM centro_custo', [], (err, rows) => {
     if (err) {
@@ -61,12 +97,62 @@ app.get('/centro-custo', (req, res) => {
   });
 });
 
+// salvar um novo cadastro (com validação)
 app.post('/cadastro', (req, res) => {
-  console.log('Recebendo um novo cadastro:', req.body);
-  res.json({ message: 'Teste de resposta do servidor' });
+  const { descricao, categoria, valor, data, centro_custo } = req.body;
+
+  // verificar se a categoria e o centro de custo existem
+  db.get(
+    'SELECT nome FROM categorias WHERE nome = ?',
+    [categoria],
+    (err, cat) => {
+      if (err || !cat)
+        return res.status(400).json({ error: 'Categoria não encontrada.' });
+
+      db.get(
+        'SELECT nome FROM centro_custo WHERE nome = ?',
+        [centro_custo],
+        (err, cc) => {
+          if (err || !cc)
+            return res
+              .status(400)
+              .json({ error: 'Centro de Custo não encontrado.' });
+
+          db.run(
+            'INSERT INTO cadastros (descricao, categoria, valor, data, centro_custo) VALUES (?, ?, ?, ?, ?)',
+            [descricao, categoria, valor, data, centro_custo],
+            function (err) {
+              if (err) return res.status(500).json({ error: err.message });
+              res.json({ id: this.lastID });
+            }
+          );
+        }
+      );
+    }
+  );
+
+  stmt.run(descricao, categoria, valor, data, centro_custo, function (err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.status(201).json({ message: 'Cadastro realizado com sucesso!' });
+    }
+  });
+
+  stmt.finalize();
 });
 
-// Exportar cadastros para Excel e zerar a tabela
+// zerar os cadastros
+app.post('/zerar', (req, res) => {
+  db.run('DELETE FROM cadastros', (err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao zerar os dados.' });
+    }
+    res.json({ message: 'Dados zerados com sucesso!' });
+  });
+});
+
+// exportar cadastros para excel
 app.get('/exportar-excel', async (req, res) => {
   db.all(
     `SELECT cadastros.id, cadastros.descricao, cadastros.categoria, cadastros.valor, cadastros.data, centro_custo.nome AS centro_custo
@@ -76,27 +162,14 @@ app.get('/exportar-excel', async (req, res) => {
     async (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
 
-      // Rota para zerar os cadastros
-      app.post('/zerar', (req, res) => {
-        db.run('DELETE FROM cadastros', (err) => {
-          if (err) {
-            return res.status(500).json({ error: 'Erro ao zerar os dados.' });
-          }
-          res.json({ message: 'Dados zerados com sucesso!' });
-        });
-      });
-
-      // Determinar o nome da planilha com base no número
       let planilhaNumero = 1;
       let filePath = path.join(__dirname, `cadastro${planilhaNumero}.xlsx`);
 
-      // Continuar procurando até encontrar um nome de arquivo que não exista
       while (fs.existsSync(filePath)) {
         planilhaNumero++;
         filePath = path.join(__dirname, `cadastro${planilhaNumero}.xlsx`);
       }
 
-      // Criar um novo arquivo Excel com o número correto
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet(`Cadastro${planilhaNumero}`);
 
@@ -113,10 +186,10 @@ app.get('/exportar-excel', async (req, res) => {
         worksheet.addRow(row);
       });
 
-      // Salvar o arquivo Excel com o nome correto
+      // salvar o arquivo Excel com o nome correto
       await workbook.xlsx.writeFile(filePath);
 
-      // Enviar o arquivo para o usuário
+      // enviar o arquivo
       res.setHeader(
         'Content-Disposition',
         `attachment; filename=${path.basename(filePath)}`
@@ -126,7 +199,7 @@ app.get('/exportar-excel', async (req, res) => {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       );
 
-      // Enviar o arquivo para download
+      // enviar o arquivo para download
       res.sendFile(filePath, (err) => {
         if (err) {
           console.error('Erro ao enviar arquivo:', err);
@@ -134,11 +207,11 @@ app.get('/exportar-excel', async (req, res) => {
           console.log('Arquivo enviado com sucesso!');
         }
 
-        // Após enviar o arquivo, excluir o arquivo temporário
+        // excluir o arquivo temporário
         fs.unlinkSync(filePath);
       });
 
-      // Limpar a tabela de cadastros após a exportação
+      // limpar a tabela de cadastros após a exportação
       db.run('DELETE FROM cadastros', function (err) {
         if (err) {
           console.error('Erro ao limpar tabela de cadastros:', err);
