@@ -118,6 +118,7 @@ app.post('/cadastro', (req, res) => {
               .status(400)
               .json({ error: 'Centro de Custo não encontrado.' });
 
+          // Agora a inserção é realizada apenas após a verificação
           db.run(
             'INSERT INTO cadastros (descricao, categoria, valor, data, centro_custo) VALUES (?, ?, ?, ?, ?)',
             [descricao, categoria, valor, data, centro_custo],
@@ -130,16 +131,6 @@ app.post('/cadastro', (req, res) => {
       );
     }
   );
-
-  stmt.run(descricao, categoria, valor, data, centro_custo, function (err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.status(201).json({ message: 'Cadastro realizado com sucesso!' });
-    }
-  });
-
-  stmt.finalize();
 });
 
 // zerar os cadastros
