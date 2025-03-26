@@ -10,7 +10,7 @@ const db = new sqlite3.Database(__dirname + '/../database.db');
 app.use(cors());
 app.use(express.json());
 
-// Criar tabelas se não existirem
+// criar tabelas se não existirem
 db.serialize(() => {
   db.run(
     `CREATE TABLE IF NOT EXISTS categorias (
@@ -37,12 +37,12 @@ db.serialize(() => {
     )`
   );
 
-  // Inserir categorias padrão
+  // inserir categorias padrão
   db.run('INSERT OR IGNORE INTO categorias (nome) VALUES');
   db.run('INSERT OR IGNORE INTO centro_custo (nome) VALUES');
 });
 
-// Criar uma nova categoria
+// criar uma nova categoria
 app.post('/categorias', (req, res) => {
   const { nome } = req.body;
   if (!nome)
@@ -57,7 +57,7 @@ app.post('/categorias', (req, res) => {
   });
 });
 
-// Criar um novo centro de custo
+// criar um novo centro de custo
 app.post('/centro-custo', (req, res) => {
   const { nome } = req.body;
   if (!nome)
@@ -74,7 +74,7 @@ app.post('/centro-custo', (req, res) => {
   });
 });
 
-// Obter categorias do banco
+// obter categorias do banco
 app.get('/categorias', (req, res) => {
   db.all('SELECT * FROM categorias', [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -82,7 +82,7 @@ app.get('/categorias', (req, res) => {
   });
 });
 
-// Obter centros de custo do banco
+// obter centros de custo do banco
 app.get('/centro-custo', (req, res) => {
   db.all('SELECT * FROM centro_custo', [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -90,11 +90,11 @@ app.get('/centro-custo', (req, res) => {
   });
 });
 
-// Salvar um novo cadastro (com validação)
+// salvar um novo cadastro (com validação)
 app.post('/cadastro', (req, res) => {
   const { descricao, categoria, valor, data, centro_custo } = req.body;
 
-  // Verificar se a categoria e o centro de custo existem
+  // verificar se a categoria e o centro de custo existem
   db.get(
     'SELECT nome FROM categorias WHERE nome = ?',
     [categoria],
@@ -125,7 +125,7 @@ app.post('/cadastro', (req, res) => {
   );
 });
 
-// Exportar cadastros para Excel
+// exportar cadastros para excel
 app.get('/exportar-excel', async (req, res) => {
   db.all(
     `SELECT cadastros.id, cadastros.descricao, cadastros.categoria, cadastros.valor, cadastros.data, centro_custo.nome AS centro_custo
