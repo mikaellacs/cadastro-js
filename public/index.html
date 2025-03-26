@@ -36,12 +36,12 @@
     <button onclick="exportarExcel()">Exportar Excel</button>
 
     <script>
-      // Função para carregar categorias e centros de custo
+      // carregar categorias e centros de custo
       async function carregarOpcoes() {
         const categoriaSelect = document.getElementById('categoria');
         const centroCustoSelect = document.getElementById('centroCusto');
 
-        // Limpar as opções antes de adicionar novas
+        // limpar as opções antes de adicionar novas
         categoriaSelect.innerHTML = '';
         centroCustoSelect.innerHTML = '';
 
@@ -66,7 +66,7 @@
         });
       }
 
-      // Criar nova categoria
+      // criar nova categoria
       async function criarCategoria() {
         const nomeCategoria = prompt('Digite o nome da nova categoria:');
         if (!nomeCategoria)
@@ -86,7 +86,7 @@
         }
       }
 
-      // Criar novo centro de custo
+      // criar novo centro de custo
       async function criarCentroCusto() {
         const nomeCentroCusto = prompt(
           'Digite o nome do novo centro de custo:'
@@ -108,7 +108,7 @@
         }
       }
 
-      // Envio do formulário de cadastro
+      // envio do formulário de cadastro
       document
         .getElementById('cadastroForm')
         .addEventListener('submit', async function (event) {
@@ -140,12 +140,12 @@
           }
         });
 
-      // Exportar os dados para Excel
+      // exportar os dados para excel
       function exportarExcel() {
         window.location.href = 'http://localhost:3000/exportar-excel';
       }
 
-      // Eventos de clique para criar categoria e centro de custo
+      // criar categoria e centro de custo
       document
         .getElementById('criarCategoria')
         .addEventListener('click', criarCategoria);
@@ -153,7 +153,7 @@
         .getElementById('criarCentroCusto')
         .addEventListener('click', criarCentroCusto);
 
-      // Carregar as opções ao carregar a página
+      // carregar as opções ao carregar a página
       carregarOpcoes();
     </script>
   </body>
