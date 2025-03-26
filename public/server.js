@@ -11,7 +11,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'database.db'));
 app.use(cors());
 app.use(express.json());
 
-// Criar tabelas se não existirem
+// criar tabelas se não existirem
 db.serialize(() => {
   db.run(
     `CREATE TABLE IF NOT EXISTS categorias (
@@ -37,9 +37,45 @@ db.serialize(() => {
       centro_custo TEXT NOT NULL
     )`
   );
+
+  // inserir categorias padrão
+  db.run('INSERT OR IGNORE INTO categorias (nome) VALUES');
+  db.run('INSERT OR IGNORE INTO centro_custo (nome) VALUES');
 });
 
-// listar categorias
+// criar uma nova categoria
+app.post('/categorias', (req, res) => {
+  const { nome } = req.body;
+  if (!nome)
+    return res.status(400).json({ error: 'Nome da categoria é obrigatório.' });
+
+  db.run('INSERT INTO categorias (nome) VALUES (?)', [nome], function (err) {
+    if (err)
+      return res
+        .status(500)
+        .json({ error: 'Erro ao cadastrar categoria. Ela pode já existir.' });
+    res.json({ id: this.lastID, nome });
+  });
+});
+
+// criar um novo centro de custo
+app.post('/centro-custo', (req, res) => {
+  const { nome } = req.body;
+  if (!nome)
+    return res
+      .status(400)
+      .json({ error: 'Nome do centro de custo é obrigatório.' });
+
+  db.run('INSERT INTO centro_custo (nome) VALUES (?)', [nome], function (err) {
+    if (err)
+      return res.status(500).json({
+        error: 'Erro ao cadastrar centro de custo. Ele pode já existir.',
+      });
+    res.json({ id: this.lastID, nome });
+  });
+});
+
+// obter categorias do banco
 app.get('/categorias', (req, res) => {
   db.all('SELECT nome FROM categorias', [], (err, rows) => {
     if (err) {
@@ -50,7 +86,7 @@ app.get('/categorias', (req, res) => {
   });
 });
 
-// listar centros de custo
+// obter centros de custo do banco
 app.get('/centro-custo', (req, res) => {
   db.all('SELECT nome FROM centro_custo', [], (err, rows) => {
     if (err) {
@@ -61,12 +97,38 @@ app.get('/centro-custo', (req, res) => {
   });
 });
 
-// Inserir cadastro
+// salvar um novo cadastro (com validação)
 app.post('/cadastro', (req, res) => {
   const { descricao, categoria, valor, data, centro_custo } = req.body;
 
-  const stmt = db.prepare(
-    'INSERT INTO cadastros (descricao, categoria, valor, data, centro_custo) VALUES (?, ?, ?, ?, ?)'
+  // verificar se a categoria e o centro de custo existem
+  db.get(
+    'SELECT nome FROM categorias WHERE nome = ?',
+    [categoria],
+    (err, cat) => {
+      if (err || !cat)
+        return res.status(400).json({ error: 'Categoria não encontrada.' });
+
+      db.get(
+        'SELECT nome FROM centro_custo WHERE nome = ?',
+        [centro_custo],
+        (err, cc) => {
+          if (err || !cc)
+            return res
+              .status(400)
+              .json({ error: 'Centro de Custo não encontrado.' });
+
+          db.run(
+            'INSERT INTO cadastros (descricao, categoria, valor, data, centro_custo) VALUES (?, ?, ?, ?, ?)',
+            [descricao, categoria, valor, data, centro_custo],
+            function (err) {
+              if (err) return res.status(500).json({ error: err.message });
+              res.json({ id: this.lastID });
+            }
+          );
+        }
+      );
+    }
   );
 
   stmt.run(descricao, categoria, valor, data, centro_custo, function (err) {
@@ -90,7 +152,7 @@ app.post('/zerar', (req, res) => {
   });
 });
 
-// exportar cadastros para Excel e zerar a tabela
+// exportar cadastros para excel
 app.get('/exportar-excel', async (req, res) => {
   db.all(
     `SELECT cadastros.id, cadastros.descricao, cadastros.categoria, cadastros.valor, cadastros.data, centro_custo.nome AS centro_custo

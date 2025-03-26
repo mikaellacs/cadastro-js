@@ -37,12 +37,13 @@
     <button onclick="zerarDados()">Zerar Dados</button>
 
     <script>
-      // função para carregar categorias e centros de custo
+      // carregar categorias e centros de custo
       async function carregarOpcoes() {
         const categoriaSelect = document.getElementById('categoria');
         const centroCustoSelect = document.getElementById('centroCusto');
 
         // limpar as opções
+
         categoriaSelect.innerHTML = '';
         centroCustoSelect.innerHTML = '';
 
@@ -141,7 +142,7 @@
           }
         });
 
-      // exportar os dados para Excel
+      // exportar os dados para excel
       function exportarExcel() {
         window.location.href = 'http://localhost:3000/exportar-excel';
       }
