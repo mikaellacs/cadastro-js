@@ -34,14 +34,15 @@
     </form>
 
     <button onclick="exportarExcel()">Exportar Excel</button>
+    <button onclick="zerarDados()">Zerar Dados</button>
 
     <script>
-      // Função para carregar categorias e centros de custo
+      // função para carregar categorias e centros de custo
       async function carregarOpcoes() {
         const categoriaSelect = document.getElementById('categoria');
         const centroCustoSelect = document.getElementById('centroCusto');
 
-        // Limpar as opções antes de adicionar novas
+        // limpar as opções
         categoriaSelect.innerHTML = '';
         centroCustoSelect.innerHTML = '';
 
@@ -66,7 +67,7 @@
         });
       }
 
-      // Criar nova categoria
+      // criar nova categoria
       async function criarCategoria() {
         const nomeCategoria = prompt('Digite o nome da nova categoria:');
         if (!nomeCategoria)
@@ -80,13 +81,13 @@
 
         if (response.ok) {
           alert('Categoria criada com sucesso!');
-          carregarOpcoes(); // Atualizar categorias
+          carregarOpcoes(); // atualizar categorias
         } else {
           alert('Erro ao criar categoria. Talvez ela já exista.');
         }
       }
 
-      // Criar novo centro de custo
+      // criar novo centro de custo
       async function criarCentroCusto() {
         const nomeCentroCusto = prompt(
           'Digite o nome do novo centro de custo:'
@@ -102,13 +103,13 @@
 
         if (response.ok) {
           alert('Centro de Custo criado com sucesso!');
-          carregarOpcoes(); // Atualizar centros de custo
+          carregarOpcoes();
         } else {
           alert('Erro ao criar centro de custo. Talvez ele já exista.');
         }
       }
 
-      // Envio do formulário de cadastro
+      // envio do formulário de cadastro
       document
         .getElementById('cadastroForm')
         .addEventListener('submit', async function (event) {
@@ -128,7 +129,7 @@
               categoria,
               valor,
               data,
-              centro_custo: centroCusto, // Corrigido para corresponder ao backend
+              centro_custo: centroCusto,
             }),
           });
 
@@ -140,12 +141,25 @@
           }
         });
 
-      // Exportar os dados para Excel
+      // exportar os dados para Excel
       function exportarExcel() {
         window.location.href = 'http://localhost:3000/exportar-excel';
       }
 
-      // Eventos de clique para criar categoria e centro de custo
+      // zerar os dados
+      function zerarDados() {
+        fetch('http://localhost:3000/zerar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => alert(data.message))
+          .catch((error) => alert('Erro ao zerar os dados.'));
+      }
+
+      // criar categoria e centro de custo
       document
         .getElementById('criarCategoria')
         .addEventListener('click', criarCategoria);
@@ -153,7 +167,7 @@
         .getElementById('criarCentroCusto')
         .addEventListener('click', criarCentroCusto);
 
-      // Carregar as opções ao carregar a página
+      // carregar as opções ao carregar a página
       carregarOpcoes();
     </script>
   </body>
