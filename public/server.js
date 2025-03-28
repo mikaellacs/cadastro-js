@@ -38,64 +38,22 @@ db.serialize(() => {
     )`
   );
 
-  // Inserir categorias padrão, se a tabela estiver vazia
-  db.serialize(() => {
-    db.get('SELECT COUNT(*) AS count FROM categorias', (err, row) => {
-      if (row.count === 0) {
-        const categorias = ['Categoria 1', 'Categoria 2', 'Categoria 3'];
-        categorias.forEach((categoria) => {
-          // Aqui, 'categoria' agora está definida no escopo da função
-          db.run(
-            'INSERT OR IGNORE INTO categorias (nome) VALUES (?)',
-            [categoria],
-            function (err) {
-              if (err) {
-                console.log('Erro ao inserir categoria:', categoria, err);
-              }
-            }
-          );
-        });
-      }
-    });
-
-    // Inserir centros de custo padrão, se a tabela estiver vazia
-    db.get('SELECT COUNT(*) AS count FROM centro_custo', (err, row) => {
-      if (row.count === 0) {
-        const centrosCusto = ['Centro 1', 'Centro 2', 'Centro 3'];
-        centrosCusto.forEach((centro) => {
-          // Aqui, 'centro' agora está definido no escopo da função
-          db.run(
-            'INSERT OR IGNORE INTO centro_custo (nome) VALUES (?)',
-            [centro],
-            function (err) {
-              if (err) {
-                console.log('Erro ao inserir centro de custo:', centro, err);
-              }
-            }
-          );
-        });
-      }
-    });
-  });
+  // inserir categorias padrão
+  db.run('INSERT OR IGNORE INTO categorias (nome) VALUES');
+  db.run('INSERT OR IGNORE INTO centro_custo (nome) VALUES');
 });
 
 // criar uma nova categoria
 app.post('/categorias', (req, res) => {
   const { nome } = req.body;
-
-  // Verifica se o nome foi enviado
-  if (!nome) {
+  if (!nome)
     return res.status(400).json({ error: 'Nome da categoria é obrigatório.' });
-  }
 
-  // Inserir a categoria na tabela
   db.run('INSERT INTO categorias (nome) VALUES (?)', [nome], function (err) {
-    if (err) {
-      console.log('Erro ao cadastrar categoria:', err);
+    if (err)
       return res
         .status(500)
         .json({ error: 'Erro ao cadastrar categoria. Ela pode já existir.' });
-    }
     res.json({ id: this.lastID, nome });
   });
 });
@@ -103,22 +61,16 @@ app.post('/categorias', (req, res) => {
 // criar um novo centro de custo
 app.post('/centro-custo', (req, res) => {
   const { nome } = req.body;
-
-  // Verifica se o nome foi enviado
-  if (!nome) {
+  if (!nome)
     return res
       .status(400)
       .json({ error: 'Nome do centro de custo é obrigatório.' });
-  }
 
-  // Inserir o centro de custo na tabela
   db.run('INSERT INTO centro_custo (nome) VALUES (?)', [nome], function (err) {
-    if (err) {
-      console.log('Erro ao cadastrar centro de custo:', err);
+    if (err)
       return res.status(500).json({
         error: 'Erro ao cadastrar centro de custo. Ele pode já existir.',
       });
-    }
     res.json({ id: this.lastID, nome });
   });
 });
@@ -127,9 +79,10 @@ app.post('/centro-custo', (req, res) => {
 app.get('/categorias', (req, res) => {
   db.all('SELECT nome FROM categorias', [], (err, rows) => {
     if (err) {
-      return res.status(500).json({ error: 'Erro ao buscar categorias.' });
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(rows);
     }
-    res.json(rows);
   });
 });
 
@@ -137,11 +90,10 @@ app.get('/categorias', (req, res) => {
 app.get('/centro-custo', (req, res) => {
   db.all('SELECT nome FROM centro_custo', [], (err, rows) => {
     if (err) {
-      return res
-        .status(500)
-        .json({ error: 'Erro ao buscar centros de custo.' });
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(rows);
     }
-    res.json(rows);
   });
 });
 
@@ -166,7 +118,6 @@ app.post('/cadastro', (req, res) => {
               .status(400)
               .json({ error: 'Centro de Custo não encontrado.' });
 
-          // Agora a inserção é realizada apenas após a verificação
           db.run(
             'INSERT INTO cadastros (descricao, categoria, valor, data, centro_custo) VALUES (?, ?, ?, ?, ?)',
             [descricao, categoria, valor, data, centro_custo],
@@ -179,6 +130,16 @@ app.post('/cadastro', (req, res) => {
       );
     }
   );
+
+  stmt.run(descricao, categoria, valor, data, centro_custo, function (err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.status(201).json({ message: 'Cadastro realizado com sucesso!' });
+    }
+  });
+
+  stmt.finalize();
 });
 
 // zerar os cadastros
@@ -262,5 +223,4 @@ app.get('/exportar-excel', async (req, res) => {
   );
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(3000, () => console.log('Servidor rodando na porta 3000'));
