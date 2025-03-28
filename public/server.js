@@ -115,11 +115,9 @@ app.post('/centro-custo', (req, res) => {
   db.run('INSERT INTO centro_custo (nome) VALUES (?)', [nome], function (err) {
     if (err) {
       console.log('Erro ao cadastrar centro de custo:', err);
-      return res
-        .status(500)
-        .json({
-          error: 'Erro ao cadastrar centro de custo. Ele pode já existir.',
-        });
+      return res.status(500).json({
+        error: 'Erro ao cadastrar centro de custo. Ele pode já existir.',
+      });
     }
     res.json({ id: this.lastID, nome });
   });
@@ -127,30 +125,24 @@ app.post('/centro-custo', (req, res) => {
 
 // obter categorias do banco
 app.get('/categorias', (req, res) => {
-  db.get(
-    'SELECT nome FROM categorias WHERE nome = ?',
-    [categoria],
-    (err, cat) => {
-      if (err || !cat)
-        return res.status(400).json({ error: 'Categoria não encontrada.' });
+  db.all('SELECT nome FROM categorias', [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao buscar categorias.' });
     }
-  );
+    res.json(rows);
+  });
 });
 
 // obter centros de custo do banco
 app.get('/centro-custo', (req, res) => {
-  db.get(
-    'SELECT nome FROM centro_custo WHERE nome = ?',
-    [centro_custo],
-    (err, cc) => {
-      if (err || !cc)
-        return res
-          .status(400)
-          .json({ error: 'Centro de Custo não encontrado.' });
-
-      // inserção no banco
+  db.all('SELECT nome FROM centro_custo', [], (err, rows) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: 'Erro ao buscar centros de custo.' });
     }
-  );
+    res.json(rows);
+  });
 });
 
 // salvar um novo cadastro (com validação)
@@ -270,4 +262,5 @@ app.get('/exportar-excel', async (req, res) => {
   );
 });
 
-app.listen(3000, () => console.log('Servidor rodando na porta 3000'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
