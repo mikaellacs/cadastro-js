@@ -79,10 +79,9 @@ app.post('/centro-custo', (req, res) => {
 app.get('/categorias', (req, res) => {
   db.all('SELECT nome FROM categorias', [], (err, rows) => {
     if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.json(rows);
+      return res.status(500).json({ error: 'Erro ao buscar categorias.' });
     }
+    res.json(rows);
   });
 });
 
@@ -90,10 +89,11 @@ app.get('/categorias', (req, res) => {
 app.get('/centro-custo', (req, res) => {
   db.all('SELECT nome FROM centro_custo', [], (err, rows) => {
     if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.json(rows);
+      return res
+        .status(500)
+        .json({ error: 'Erro ao buscar centros de custo.' });
     }
+    res.json(rows);
   });
 });
 
@@ -223,4 +223,5 @@ app.get('/exportar-excel', async (req, res) => {
   );
 });
 
-app.listen(3000, () => console.log('Servidor rodando na porta 3000'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
