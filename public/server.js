@@ -11,7 +11,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'database.db'));
 app.use(cors());
 app.use(express.json());
 
-// criar tabelas se não existirem
+// Criar tabelas se não existirem
 db.serialize(() => {
   db.run(
     `CREATE TABLE IF NOT EXISTS categorias (
@@ -38,12 +38,16 @@ db.serialize(() => {
     )`
   );
 
-  // inserir categorias padrão
-  db.run('INSERT OR IGNORE INTO categorias (nome) VALUES');
-  db.run('INSERT OR IGNORE INTO centro_custo (nome) VALUES');
+  // Inserir categorias padrão (se necessário)
+  db.run(
+    'INSERT OR IGNORE INTO categorias (nome) VALUES ("Exemplo Categoria")'
+  );
+  db.run(
+    'INSERT OR IGNORE INTO centro_custo (nome) VALUES ("Exemplo Centro de Custo")'
+  );
 });
 
-// criar uma nova categoria
+// Criar uma nova categoria
 app.post('/categorias', (req, res) => {
   const { nome } = req.body;
   if (!nome)
@@ -58,7 +62,7 @@ app.post('/categorias', (req, res) => {
   });
 });
 
-// criar um novo centro de custo
+// Criar um novo centro de custo
 app.post('/centro-custo', (req, res) => {
   const { nome } = req.body;
   if (!nome)
@@ -75,7 +79,7 @@ app.post('/centro-custo', (req, res) => {
   });
 });
 
-// obter categorias do banco
+// Obter categorias do banco
 app.get('/categorias', (req, res) => {
   db.all('SELECT nome FROM categorias', [], (err, rows) => {
     if (err) {
@@ -85,7 +89,7 @@ app.get('/categorias', (req, res) => {
   });
 });
 
-// obter centros de custo do banco
+// Obter centros de custo do banco
 app.get('/centro-custo', (req, res) => {
   db.all('SELECT nome FROM centro_custo', [], (err, rows) => {
     if (err) {
@@ -97,11 +101,11 @@ app.get('/centro-custo', (req, res) => {
   });
 });
 
-// salvar um novo cadastro (com validação)
+// Salvar um novo cadastro (com validação)
 app.post('/cadastro', (req, res) => {
   const { descricao, categoria, valor, data, centro_custo } = req.body;
 
-  // verificar se a categoria e o centro de custo existem
+  // Verificar se a categoria e o centro de custo existem
   db.get(
     'SELECT nome FROM categorias WHERE nome = ?',
     [categoria],
@@ -130,19 +134,9 @@ app.post('/cadastro', (req, res) => {
       );
     }
   );
-
-  stmt.run(descricao, categoria, valor, data, centro_custo, function (err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.status(201).json({ message: 'Cadastro realizado com sucesso!' });
-    }
-  });
-
-  stmt.finalize();
 });
 
-// zerar os cadastros
+// Zerar os cadastros
 app.post('/zerar', (req, res) => {
   db.run('DELETE FROM cadastros', (err) => {
     if (err) {
@@ -152,7 +146,7 @@ app.post('/zerar', (req, res) => {
   });
 });
 
-// exportar cadastros para excel
+// Exportar cadastros para Excel
 app.get('/exportar-excel', async (req, res) => {
   db.all(
     `SELECT cadastros.id, cadastros.descricao, cadastros.categoria, cadastros.valor, cadastros.data, centro_custo.nome AS centro_custo
@@ -186,10 +180,10 @@ app.get('/exportar-excel', async (req, res) => {
         worksheet.addRow(row);
       });
 
-      // salvar o arquivo Excel com o nome correto
+      // Salvar o arquivo Excel com o nome correto
       await workbook.xlsx.writeFile(filePath);
 
-      // enviar o arquivo
+      // Enviar o arquivo
       res.setHeader(
         'Content-Disposition',
         `attachment; filename=${path.basename(filePath)}`
@@ -199,7 +193,7 @@ app.get('/exportar-excel', async (req, res) => {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       );
 
-      // enviar o arquivo para download
+      // Enviar o arquivo para download
       res.sendFile(filePath, (err) => {
         if (err) {
           console.error('Erro ao enviar arquivo:', err);
@@ -207,11 +201,11 @@ app.get('/exportar-excel', async (req, res) => {
           console.log('Arquivo enviado com sucesso!');
         }
 
-        // excluir o arquivo temporário
+        // Excluir o arquivo temporário
         fs.unlinkSync(filePath);
       });
 
-      // limpar a tabela de cadastros após a exportação
+      // Limpar a tabela de cadastros após a exportação
       db.run('DELETE FROM cadastros', function (err) {
         if (err) {
           console.error('Erro ao limpar tabela de cadastros:', err);
