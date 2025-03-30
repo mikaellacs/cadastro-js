@@ -58,6 +58,7 @@ select {
 }
 
 button {
+  font-size: 2rem;
   padding: 1rem 2rem;
   border-radius: 1rem;
   border: none;
@@ -68,6 +69,7 @@ button {
 }
 
 .botao1 {
+  font-size: 2rem;
   padding: 1rem 2rem;
   border-radius: 1rem;
   border: none;
@@ -79,6 +81,7 @@ button {
 }
 
 .botao2 {
+  font-size: 1.6rem;
   padding: 1rem 2rem;
   border-radius: 1rem;
   border: none;
