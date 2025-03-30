@@ -4,37 +4,40 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cadastro de Caixas</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h2>Cadastro de Caixas</h2>
-    <form id="cadastroForm">
-      <label>Descrição: <input type="text" id="descricao" required /></label>
-      <br /><br />
-      <label>
-        Categoria:
+    <div class="form">
+      <h1>Cadastro de Caixas</h1>
+      <div class="barra-horizontal"></div>
+      <form id="cadastroForm">
+        <label for="descrocao">Descrição:</label>
+        <input type="text" id="descricao" required />
+        <br /><br />
+        <label for="categoria"> Categoria: </label>
         <select id="categoria" required></select>
-        <button type="button" id="criarCategoria">Criar Categoria</button>
-      </label>
-      <br /><br />
-      <label
-        >Valor: <input type="number" id="valor" step="0.01" required
-      /></label>
-      <br /><br />
-      <label>Data: <input type="date" id="data" required /></label>
-      <br /><br />
-      <label>
-        Centro de Custo:
+        <button class="botao2" type="button" id="criarCategoria">
+          Criar Categoria
+        </button>
+        <br /><br />
+        <label for="valor">Valor: </label>
+        <input type="number" id="valor" step="0.01" required />
+        <br /><br />
+        <label for="data">Data: </label>
+        <input type="date" id="data" required />
+        <br /><br />
+        <label for="centroCusto"> Centro de Custo: </label>
         <select id="centroCusto" required></select>
-        <button type="button" id="criarCentroCusto">
+        <button class="botao2" type="button" id="criarCentroCusto">
           Criar Centro de Custo
         </button>
-      </label>
-      <br /><br />
-      <button type="submit">Salvar</button>
-    </form>
+        <br /><br />
+        <button class="botao1" type="submit">Salvar</button>
+      </form>
 
-    <button onclick="exportarExcel()">Exportar Excel</button>
-    <button onclick="zerarDados()">Zerar Dados</button>
+      <button onclick="exportarExcel()">Exportar Excel</button>
+      <button onclick="zerarDados()">Zerar Dados</button>
+    </div>
 
     <script>
       // carregar categorias e centros de custo
